@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Excel File Loader</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-2.2.4.min.js"  integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="  crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/jszip.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
+        <style>
+        table {
+            border-collapse: separate;
+            border-spacing: 1em;
+        }
+        td.success{
+              color: white;
+              background: rgb(66, 189, 66);
+              text-align: center;
+              border-radius: 5px;
+        }
+        td.failure {
+              color: white;
+              background: rgb(228, 56, 56);
+              text-align: center;
+              border-radius: 5px;
+        }
+        .inputarea {
+              padding: 20px;
+        }
+        #indexrow{
+          text-align: center;
+        }
+        .headingrow{
+          font-weight: bold;
+          text-align: center;
+        }
+        </style>
+    </head>
+<body>
+
+  <!--File Selector-->
+<div class="container inputarea">
+    <div class="input-group">
+        <label class="input-group-btn">
+            <span class="btn btn-primary">
+                Browse<input type="file" id="file" style="display: none;" multiple>
+            </span>
+        </label>
+        <input type="text" class="form-control" readonly >
+    </div>
+</div>
+<div class="container text-center">
+  <div class="row justify-content-center" id="indexrow">
+    <h5 id="index_heading">
+    </h5>
+  </div>
+</div>
+
+<!--The div where Data will be shown-->
+<div class="container">
+    <table class="table" id="mytable"></table>
+</div>
+
+
+<script>
+
+//Function to show the selected file's name
+$(function() {
+
+$(document).on('change', ':file', function() {
+  var input = $(this),
+      numFiles = input.get(0).files ? input.get(0).files.length : 1,
+      label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+  input.trigger('fileselect', [numFiles, label]);
+});
+
+// We can watch for our custom `fileselect` event like this
+$(document).ready( function() {
+    $(':file').on('fileselect', function(event, numFiles, label) {
+
+        var input = $(this).parents('.input-group').find(':text'),
+            log = numFiles > 1 ? numFiles + ' files selected' : label;
+
+        if( input.length ) {
+            input.val(log);
+        } else {
+            if( log ) alert(log);
+        }
+
+    });
+});
+
+});
+
+//Excel to JSON object
+
+var ExcelToJSON = function() {
+  document.getElementsByTagName("label").innerHTML=file;
+console.log("this mmetthod is clled");
+  this.parseExcel = function(file) {
+    var reader = new FileReader();
+
+    reader.onload = function(e) {
+      var data = e.target.result;
+      var workbook = XLSX.read(data, {
+        type: 'binary'
+      });
+      
+      workbook.SheetNames.forEach(function(sheetName) {
+        // Here is your object
+        var XL_row_object = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName],{header:1});
+        var json_object = JSON.stringify(XL_row_object);
+        var jsonData = JSON.parse(json_object);
+        let table = document.getElementById("mytable");
+        var row_ = 0;
+        
+        
+        var n;
+        var index_ = jsonData[0];
+		if(String(index_).includes('TRUE')){
+		n=true;
+		}else if(String(index_).includes('True')){
+		n=true;
+		}else if(String(index_).includes('true')){
+		n=true;
+		}else if(String(index_).includes('False')){
+		n=true;
+		}else if(String(index_).includes('FALSE')){
+		n=true;
+		}else if(String(index_).includes('false')){
+		n=true;
+		}else{
+		n=false;
+		}
+		//index date AA AB AC AD 
+
+		//var n = String(index_).includes('True');
+		//var n = String(index_).includes('TRUE');
+          //window.alert(n);
+		      var row_start;
+          if(n==true){
+            //window.alert("truehai");
+			      row_start=0;
+            document.getElementById('index_heading').style="display:none";
+          }else if(n==false){
+            //window.alert("falsehai");
+            
+            row_start=1;
+            let row = table.insertRow(row_);
+            row.className="headingrow";
+            for(var k =0;k<jsonData[0].length;k++){
+              var cell1 = row.insertCell(j);
+              cell1.innerHTML = jsonData[0][k];
+            var str = jsonData[0][k].valueOf().toUpperCase().trim();
+              //window.alert(str);
+              if(str == "TRUE") {
+                cell1.className = "success";
+              }
+              else if(str == "FALSE"){
+                cell1.className="failure"
+              }
+            }row_=row_+1;
+            //document.getElementById('index_heading').innerHTML=index_;
+            }
+        //window.alert(row_start);
+        //document.getElementById('index_heading').innerHTML=index_;
+        for (var i = row_start; i < jsonData.length; i++) 
+        {
+          let row = table.insertRow(row_);
+          for(var j=0; j<jsonData[i].length;j++)
+          {
+            var cell1 = row.insertCell(j);
+            cell1.innerHTML = jsonData[i][j];
+           var str = jsonData[i][j].valueOf().toUpperCase().trim();
+            //window.alert(str);
+            if(str == "TRUE") {
+              cell1.className = "success";
+            }
+            else if(str == "FALSE"){
+              cell1.className="failure"
+            }
+          }
+          row_=row_+1;
+            //console.log(jsonData[i]);
+        }
+})
+
+    };
+
+    reader.onerror = function(ex) {
+      console.log(ex);
+    };
+
+    reader.readAsBinaryString(file);
+  };
+};
+
+function handleFileSelect(evt) {
+    
+    var files = evt.target.files; 
+    var xl2json = new ExcelToJSON();
+    xl2json.parseExcel(files[0]);
+  }
+  document.getElementById('file').addEventListener('change', handleFileSelect, false);
+
+console.log("I am here");
+</script>
+</body>
+</html>
